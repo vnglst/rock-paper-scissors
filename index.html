@@ -17,7 +17,7 @@
         justify-content: center;
         align-items: center;
         height: 100%;
-        background: linear-gradient(to bottom, #000 0%, #0b405a 50%);
+        background: linear-gradient(to bottom, #fff 0%, #e1bebe 100%);
       }
 
       canvas {
@@ -49,7 +49,7 @@
 
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
-      const size = 50; // Grid size (50x50 for example)
+      const size = 100; // Grid size (50x50 for example)
       const cellSize = canvas.width / size;
       let grid = createGrid(size);
 
@@ -134,18 +134,38 @@
               continue;
             }
             let age = ageGrid[x][y];
-            let shade = Math.min(age * 10, 255); // Increase the shade by 10 for each age, up to a maximum of 255
+            let shade = Math.max(100 - age * 10, 10);
+            color = lightenColor(color, shade);
             ctx.fillStyle = color;
             ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
           }
         }
       }
 
+      function lightenColor(color, percent) {
+        var num = parseInt(color.replace("#", ""), 16),
+          amt = Math.round(2.55 * percent),
+          R = (num >> 16) + amt,
+          B = ((num >> 8) & 0x00ff) + amt,
+          G = (num & 0x0000ff) + amt;
+        return (
+          "#" +
+          (
+            0x1000000 +
+            (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+            (B < 255 ? (B < 1 ? 0 : B) : 255) * 0x100 +
+            (G < 255 ? (G < 1 ? 0 : G) : 255)
+          )
+            .toString(16)
+            .slice(1)
+        );
+      }
+
       function simulate() {
         updateGrid();
         drawGrid();
-        // requestAnimationFrame(simulate);
-        setTimeout(() => requestAnimationFrame(simulate), 50);
+        requestAnimationFrame(simulate);
+        // setTimeout(() => requestAnimationFrame(simulate), 50);
       }
 
       simulate();
