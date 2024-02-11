@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rock Paper Scissors</title>
+    <meta
+      name="description"
+      content="A simple cellular automaton simulation of the rock-paper-scissors game."
+    />
+    <link rel="canonical" href="https://rock-paper-scissors.koenvangilst.nl/" />
+    <link rel="author" href="https://koenvangilst.nl" />
+    <meta name="theme-color" content="#0b405a" />
+    <meta name="creator" content="Koen van Gilst" />
     <style>
       html {
         height: 100%;
@@ -17,23 +25,81 @@
         justify-content: center;
         align-items: center;
         height: 100%;
-        background: linear-gradient(to bottom, #fff 0%, #e1bebe 100%);
+        background: linear-gradient(to bottom, #000 0%, #0b405a 100%);
       }
 
       canvas {
         display: block;
-        border-radius: 10px;
+        border-radius: 5px;
         overflow: hidden;
         font-family: monospace;
-        margin: auto;
+
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
         width: min(70vh, 80%);
         max-width: 600px;
       }
+
+      .legend {
+        display: flex;
+        margin-bottom: 20px;
+        gap: 10px;
+        margin-top: auto;
+      }
+
+      .legend-item {
+        display: flex;
+        gap: 10px;
+        margin: 0 10px;
+        color: #ffffff;
+        font-size: 10px;
+        font-family: monospace;
+        align-items: center;
+      }
+
+      .color-block {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+      }
+
+      #made {
+        text-align: center;
+        line-height: 1.5;
+        font-family: monospace;
+        margin-top: auto;
+        margin-bottom: 20px;
+        font-size: 10px;
+        color: #ffffff;
+      }
+
+      a {
+        color: #ffffff;
+        text-decoration: none;
+        border-bottom: 1px solid #ffffff;
+      }
     </style>
   </head>
   <body>
+    <div class="legend">
+      <div class="legend-item">
+        <span class="color-block" style="background-color: #d05228"></span>
+        <span>Rock</span>
+      </div>
+      <div class="legend-item">
+        <span class="color-block" style="background-color: #dfa927"></span>
+        <span>Paper</span>
+      </div>
+      <div class="legend-item">
+        <span class="color-block" style="background-color: #0b405a"></span>
+        <span>Scissors</span>
+      </div>
+    </div>
     <canvas id="canvas" width="500" height="500"></canvas>
+
+    <p id="made">
+      made by <a href="https://koenvangilst.nl">Koen van Gilst</a> | source on
+      <a href="https://github.com/vnglst/purple-rain">github</a>
+    </p>
     <script>
       const colorPalette = {
         deepSeaBlue: "#0b405a",
@@ -47,6 +113,8 @@
       const PAPER_COLOR = colorPalette.goldenrod;
       const SCISSORS_COLOR = colorPalette.deepSeaBlue;
 
+      const WITHSTAND_AGE = 10;
+
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
       const size = 100; // Grid size (50x50 for example)
@@ -54,11 +122,9 @@
       let grid = createGrid(size);
 
       // Initialize the center cells with different types
-      let centerX = Math.floor(size / 2);
-      let centerY = Math.floor(size / 2);
-      grid[centerX][size - 1] = 1; // Rock
-      grid[0][centerY] = 2; // Paper
-      grid[centerX][0] = 3; // Scissors
+      grid[0][size - 1] = 1; // Rock
+      grid[size - 1][0] = 2; // Paper
+      grid[size - 1][size - 1] = 3; // Scissors
 
       function createGrid(size) {
         return new Array(size).fill(null).map(() => new Array(size).fill(0));
@@ -103,16 +169,29 @@
 
       function determineState(x, y, neighbor) {
         const currentState = grid[x][y];
+        const currentAge = ageGrid[x][y];
 
         if (neighbor === null) return currentState; // Edge of the grid
 
         if (currentState === 0 && neighbor !== 0) {
           return neighbor; // Empty cell takes on the state of the neighbor
         } else if (currentState === 1 && neighbor === 2) {
+          if (currentAge > WITHSTAND_AGE) {
+            ageGrid[x][y] -= currentAge / 2;
+            return 1; // Rock withstands paper
+          }
           return 2; // Rock turns to paper
         } else if (currentState === 2 && neighbor === 3) {
+          if (currentAge > WITHSTAND_AGE) {
+            ageGrid[x][y] -= currentAge / 2;
+            return 2; // Paper withstands scissors
+          }
           return 3; // Paper turns to scissors
         } else if (currentState === 3 && neighbor === 1) {
+          if (currentAge > WITHSTAND_AGE) {
+            ageGrid[x][y] -= currentAge / 2;
+            return 3; // Scissors withstand rock
+          }
           return 1; // Scissors turn to rock
         }
 
@@ -134,38 +213,16 @@
               continue;
             }
             let age = ageGrid[x][y];
-            let shade = Math.max(100 - age * 10, 10);
-            color = lightenColor(color, shade);
             ctx.fillStyle = color;
             ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
           }
         }
       }
 
-      function lightenColor(color, percent) {
-        var num = parseInt(color.replace("#", ""), 16),
-          amt = Math.round(2.55 * percent),
-          R = (num >> 16) + amt,
-          B = ((num >> 8) & 0x00ff) + amt,
-          G = (num & 0x0000ff) + amt;
-        return (
-          "#" +
-          (
-            0x1000000 +
-            (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
-            (B < 255 ? (B < 1 ? 0 : B) : 255) * 0x100 +
-            (G < 255 ? (G < 1 ? 0 : G) : 255)
-          )
-            .toString(16)
-            .slice(1)
-        );
-      }
-
       function simulate() {
         updateGrid();
         drawGrid();
         requestAnimationFrame(simulate);
-        // setTimeout(() => requestAnimationFrame(simulate), 50);
       }
 
       simulate();
