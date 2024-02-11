@@ -34,6 +34,77 @@
   </head>
   <body>
     <canvas id="canvas" width="500" height="500"></canvas>
-    <script></script>
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const size = 50; // Grid size (50x50)
+      const cellSize = canvas.width / size;
+      let grid = createGrid(size);
+
+      // Initialize the center cell as alive
+      let centerX = Math.floor(size / 2);
+      let centerY = Math.floor(size / 2);
+      grid[centerX][centerY] = 1;
+
+      function createGrid(size) {
+        return new Array(size).fill(null).map(() => new Array(size).fill(0));
+      }
+
+      function drawGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let y = 0; y < size; y++) {
+          for (let x = 0; x < size; x++) {
+            if (grid[x][y] === 1) {
+              ctx.fillStyle = "green";
+              ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+      }
+
+      function updateGrid() {
+        let newGrid = createGrid(size);
+        for (let y = 0; y < size; y++) {
+          for (let x = 0; x < size; x++) {
+            let aliveNeighbors = countAliveNeighbors(x, y);
+            if (grid[x][y] === 0 && aliveNeighbors > 0) {
+              newGrid[x][y] = 1; // Cell becomes alive if it has any alive neighbors
+            } else {
+              newGrid[x][y] = grid[x][y];
+            }
+          }
+        }
+        grid = newGrid;
+      }
+
+      function countAliveNeighbors(x, y) {
+        let alive = 0;
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            if (i === 0 && j === 0) continue; // Skip the cell itself
+            let nx = x + i;
+            let ny = y + j;
+            if (
+              nx >= 0 &&
+              nx < size &&
+              ny >= 0 &&
+              ny < size &&
+              grid[nx][ny] === 1
+            ) {
+              alive++;
+            }
+          }
+        }
+        return alive;
+      }
+
+      function simulate() {
+        updateGrid();
+        drawGrid();
+        requestAnimationFrame(simulate); // Repeat the simulation each animation frame
+      }
+
+      simulate(); // Start the simulation
+    </script>
   </body>
 </html>
