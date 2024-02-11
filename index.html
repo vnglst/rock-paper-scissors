@@ -17,7 +17,7 @@
         justify-content: center;
         align-items: center;
         height: 100%;
-        background: linear-gradient(to bottom, #ff88aa 0%, #2d135f 100%);
+        background: linear-gradient(to bottom, #000 0%, #0b405a 50%);
       }
 
       canvas {
@@ -35,9 +35,17 @@
   <body>
     <canvas id="canvas" width="500" height="500"></canvas>
     <script>
-      const ROCK_COLOR = "red";
-      const PAPER_COLOR = "blue";
-      const SCISSORS_COLOR = "green";
+      const colorPalette = {
+        deepSeaBlue: "#0b405a",
+        burntSienna: "#d05228",
+        goldenrod: "#dfa927",
+        paleRose: "#e1bebe",
+        pureWhite: "#ffffff",
+      };
+
+      const ROCK_COLOR = colorPalette.burntSienna;
+      const PAPER_COLOR = colorPalette.goldenrod;
+      const SCISSORS_COLOR = colorPalette.deepSeaBlue;
 
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
