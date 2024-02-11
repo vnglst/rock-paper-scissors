@@ -37,14 +37,16 @@
     <script>
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
-      const size = 50; // Grid size (50x50)
+      const size = 150; // Grid size (50x50 for example)
       const cellSize = canvas.width / size;
       let grid = createGrid(size);
 
-      // Initialize the center cell as alive
+      // Initialize the center cells with different types
       let centerX = Math.floor(size / 2);
       let centerY = Math.floor(size / 2);
-      grid[centerX][centerY] = 1;
+      grid[centerX][centerY] = 1; // Rock
+      grid[centerX + 10][centerY] = 2; // Paper
+      grid[centerX][centerY + 10] = 3; // Scissors
 
       function createGrid(size) {
         return new Array(size).fill(null).map(() => new Array(size).fill(0));
@@ -55,9 +57,15 @@
         for (let y = 0; y < size; y++) {
           for (let x = 0; x < size; x++) {
             if (grid[x][y] === 1) {
-              ctx.fillStyle = "green";
-              ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+              ctx.fillStyle = "red"; // Rock
+            } else if (grid[x][y] === 2) {
+              ctx.fillStyle = "blue"; // Paper
+            } else if (grid[x][y] === 3) {
+              ctx.fillStyle = "green"; // Scissors
+            } else {
+              continue;
             }
+            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
           }
         }
       }
@@ -66,45 +74,59 @@
         let newGrid = createGrid(size);
         for (let y = 0; y < size; y++) {
           for (let x = 0; x < size; x++) {
-            let aliveNeighbors = countAliveNeighbors(x, y);
-            if (grid[x][y] === 0 && aliveNeighbors > 0) {
-              newGrid[x][y] = 1; // Cell becomes alive if it has any alive neighbors
-            } else {
-              newGrid[x][y] = grid[x][y];
-            }
+            let direction = getRandomDirection();
+            let neighbor = getNeighbor(x, y, direction);
+            newGrid[x][y] = determineState(x, y, neighbor);
           }
         }
         grid = newGrid;
       }
 
-      function countAliveNeighbors(x, y) {
-        let alive = 0;
-        for (let i = -1; i <= 1; i++) {
-          for (let j = -1; j <= 1; j++) {
-            if (i === 0 && j === 0) continue; // Skip the cell itself
-            let nx = x + i;
-            let ny = y + j;
-            if (
-              nx >= 0 &&
-              nx < size &&
-              ny >= 0 &&
-              ny < size &&
-              grid[nx][ny] === 1
-            ) {
-              alive++;
-            }
-          }
+      function getRandomDirection() {
+        const directions = [
+          [-1, 0], // left
+          [1, 0], // right
+          [0, -1], // up
+          [0, 1], // down
+        ];
+        return directions[Math.floor(Math.random() * directions.length)];
+      }
+
+      function getNeighbor(x, y, direction) {
+        let nx = x + direction[0];
+        let ny = y + direction[1];
+        if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+          return grid[nx][ny];
         }
-        return alive;
+        return null;
+      }
+
+      function determineState(x, y, neighbor) {
+        const currentState = grid[x][y];
+
+        if (neighbor === null) return currentState; // Edge of the grid
+
+        if (currentState === 0 && neighbor !== 0) {
+          return neighbor; // Empty cell takes on the state of the neighbor
+        } else if (currentState === 1 && neighbor === 2) {
+          return 2; // Rock turns to paper
+        } else if (currentState === 2 && neighbor === 3) {
+          return 3; // Paper turns to scissors
+        } else if (currentState === 3 && neighbor === 1) {
+          return 1; // Scissors turn to rock
+        }
+
+        return currentState; // Remains the same if no conditions met
       }
 
       function simulate() {
         updateGrid();
         drawGrid();
-        requestAnimationFrame(simulate); // Repeat the simulation each animation frame
+        requestAnimationFrame(simulate);
+        // setTimeout(() => requestAnimationFrame(simulate), 500);
       }
 
-      simulate(); // Start the simulation
+      simulate();
     </script>
   </body>
 </html>
