@@ -35,51 +35,43 @@
   <body>
     <canvas id="canvas" width="500" height="500"></canvas>
     <script>
+      const ROCK_COLOR = "red";
+      const PAPER_COLOR = "blue";
+      const SCISSORS_COLOR = "green";
+
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
-      const size = 150; // Grid size (50x50 for example)
+      const size = 50; // Grid size (50x50 for example)
       const cellSize = canvas.width / size;
       let grid = createGrid(size);
 
       // Initialize the center cells with different types
       let centerX = Math.floor(size / 2);
       let centerY = Math.floor(size / 2);
-      grid[centerX][centerY] = 1; // Rock
-      grid[centerX + 10][centerY] = 2; // Paper
-      grid[centerX][centerY + 10] = 3; // Scissors
+      grid[centerX][size - 1] = 1; // Rock
+      grid[0][centerY] = 2; // Paper
+      grid[centerX][0] = 3; // Scissors
 
       function createGrid(size) {
         return new Array(size).fill(null).map(() => new Array(size).fill(0));
       }
 
-      function drawGrid() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let y = 0; y < size; y++) {
-          for (let x = 0; x < size; x++) {
-            if (grid[x][y] === 1) {
-              ctx.fillStyle = "red"; // Rock
-            } else if (grid[x][y] === 2) {
-              ctx.fillStyle = "blue"; // Paper
-            } else if (grid[x][y] === 3) {
-              ctx.fillStyle = "green"; // Scissors
-            } else {
-              continue;
-            }
-            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-          }
-        }
-      }
+      let ageGrid = createGrid(size); // Create a new grid to store the age of each cell
 
       function updateGrid() {
         let newGrid = createGrid(size);
+        let newAgeGrid = createGrid(size);
         for (let y = 0; y < size; y++) {
           for (let x = 0; x < size; x++) {
             let direction = getRandomDirection();
             let neighbor = getNeighbor(x, y, direction);
             newGrid[x][y] = determineState(x, y, neighbor);
+            newAgeGrid[x][y] =
+              newGrid[x][y] === grid[x][y] ? ageGrid[x][y] + 1 : 0;
           }
         }
         grid = newGrid;
+        ageGrid = newAgeGrid;
       }
 
       function getRandomDirection() {
@@ -119,11 +111,33 @@
         return currentState; // Remains the same if no conditions met
       }
 
+      function drawGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let y = 0; y < size; y++) {
+          for (let x = 0; x < size; x++) {
+            let color;
+            if (grid[x][y] === 1) {
+              color = ROCK_COLOR; // Rock
+            } else if (grid[x][y] === 2) {
+              color = PAPER_COLOR; // Paper
+            } else if (grid[x][y] === 3) {
+              color = SCISSORS_COLOR; // Scissors
+            } else {
+              continue;
+            }
+            let age = ageGrid[x][y];
+            let shade = Math.min(age * 10, 255); // Increase the shade by 10 for each age, up to a maximum of 255
+            ctx.fillStyle = color;
+            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+
       function simulate() {
         updateGrid();
         drawGrid();
-        requestAnimationFrame(simulate);
-        // setTimeout(() => requestAnimationFrame(simulate), 500);
+        // requestAnimationFrame(simulate);
+        setTimeout(() => requestAnimationFrame(simulate), 50);
       }
 
       simulate();
